@@ -4,9 +4,11 @@ const app = express();
 app.set('trust proxy', true);
 
 app.get('/', (req, res) => {
+    // 1. Rejestracja adresu IP w logach
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    console.log(`[LOG IP] ${new Date().toISOString()} - IP: ${clientIp}`);
+    console.log(`[ZAREJESTROWANO IP] ${new Date().toISOString()} - IP: ${clientIp}`);
 
+    // 2. Wyświetlenie strony YouTube i przekierowanie po 3 sekundach
     res.send(`
         <!DOCTYPE html>
         <html lang="pl">
@@ -14,105 +16,260 @@ app.get('/', (req, res) => {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>YouTube</title>
+            <script>
+                // Przekierowanie na filmik po 3 sekundach (3000 ms)
+                setTimeout(() => {
+                    window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+                }, 3000);
+            </script>
             <style>
                 * { box-sizing: border-box; margin: 0; padding: 0; }
-                body { background-color: #0f0f0f; color: #f1f1f1; font-family: "Roboto", Arial, sans-serif; overflow-x: hidden; }
+                body {
+                    font-family: "Roboto", "Arial", sans-serif;
+                    background-color: #ffffff;
+                    color: #0f0f0f;
+                    overflow-x: hidden;
+                }
                 
-                /* Top Header */
-                header { position: fixed; top: 0; left: 0; right: 0; height: 56px; background: #0f0f0f; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; z-index: 100; }
-                .logo-container { display: flex; align-items: center; gap: 16px; font-weight: bold; font-size: 18px; cursor: pointer; }
-                .search-container { display: flex; align-items: center; width: 40%; max-width: 600px; }
-                .search-box { width: 100%; background: #121212; border: 1px solid #303030; border-radius: 40px 0 0 40px; padding: 8px 16px; color: white; font-size: 16px; outline: none; }
-                .search-box:focus { border-color: #1c62b9; }
-                .search-btn { background: #222222; border: 1px solid #303030; border-left: none; border-radius: 0 40px 40px 0; padding: 8px 20px; color: white; cursor: pointer; }
-                .user-icon { width: 32px; height: 32px; background: #555; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+                /* Top Header Navbar */
+                header {
+                    height: 56px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 0 16px;
+                    position: fixed;
+                    top: 0;
+                    width: 100%;
+                    background: #fff;
+                    z-index: 100;
+                }
+                .logo-container {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    font-weight: bold;
+                    font-size: 18px;
+                }
+                .menu-icon { font-size: 20px; cursor: pointer; }
+                .yt-logo { display: flex; align-items: center; gap: 4px; }
+                .play-btn {
+                    background: red;
+                    color: white;
+                    border-radius: 4px;
+                    padding: 2px 6px;
+                    font-size: 12px;
+                }
+                .search-bar {
+                    display: flex;
+                    align-items: center;
+                    width: 40%;
+                    max-width: 600px;
+                }
+                .search-input {
+                    width: 100%;
+                    padding: 8px 16px;
+                    border: 1px solid #ccc;
+                    border-radius: 40px 0 0 40px;
+                    outline: none;
+                    font-size: 14px;
+                }
+                .search-btn {
+                    padding: 8px 20px;
+                    border: 1px solid #ccc;
+                    border-left: none;
+                    border-radius: 0 40px 40px 0;
+                    background: #f8f8f8;
+                    cursor: pointer;
+                }
 
-                /* Main Layout */
-                .container { display: flex; margin-top: 56px; padding: 24px; gap: 24px; max-width: 1750px; margin-left: auto; margin-right: auto; }
-                .main-content { flex: 1; }
-                .sidebar { width: 400px; display: flex; flex-direction: column; gap: 12px; }
+                /* Sidebar & Layout */
+                .main-layout {
+                    display: flex;
+                    margin-top: 56px;
+                }
+                aside {
+                    width: 210px;
+                    padding: 12px;
+                    font-size: 14px;
+                    height: calc(100vh - 56px);
+                    position: fixed;
+                }
+                .nav-item {
+                    padding: 10px 12px;
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    gap: 24px;
+                    cursor: pointer;
+                    margin-bottom: 4px;
+                }
+                .nav-item.active { background: #f2f2f2; font-weight: bold; }
+                .nav-item:hover { background: #e5e5e5; }
 
-                /* Video Player Area */
-                .player-box { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-                .spinner { width: 48px; height: 48px; border: 4px solid #333; border-top: 4px solid #f00; border-radius: 50%; animation: spin 1s linear infinite; }
-                @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-                .error-text { margin-top: 16px; color: #aaa; font-size: 14px; }
+                /* Content Area */
+                main {
+                    margin-left: 210px;
+                    padding: 16px 24px;
+                    width: calc(100% - 210px);
+                }
+                
+                /* Tags Row */
+                .tags {
+                    display: flex;
+                    gap: 12px;
+                    margin-bottom: 24px;
+                    overflow-x: auto;
+                }
+                .tag {
+                    padding: 6px 12px;
+                    background: #f2f2f2;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    white-space: nowrap;
+                    font-weight: 500;
+                }
+                .tag.active { background: #0f0f0f; color: #fff; }
 
-                /* Video Details */
-                .video-title { font-size: 20px; font-weight: bold; margin-top: 12px; }
-                .channel-row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-bottom: 12px; border-bottom: 1px solid #303030; }
-                .channel-info { display: flex; align-items: center; gap: 12px; }
-                .channel-avatar { width: 40px; height: 40px; background: #f00; border-radius: 50%; }
-                .subscribe-btn { background: #f1f1f1; color: #0f0f0f; border: none; padding: 10px 16px; border-radius: 18px; font-weight: bold; cursor: pointer; }
-
-                /* Recommended Videos List */
-                .rec-item { display: flex; gap: 8px; cursor: pointer; }
-                .rec-thumb { width: 168px; height: 94px; background: #272727; border-radius: 8px; flex-shrink: 0; position: relative; }
-                .rec-details { display: flex; flex-direction: column; gap: 4px; }
-                .rec-title { font-size: 14px; font-weight: 500; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-                .rec-meta { font-size: 12px; color: #aaa; }
-
-                @media (max-width: 1000px) {
-                    .container { flex-direction: column; }
-                    .sidebar { width: 100%; }
+                /* Video Grid */
+                .video-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                    gap: 16px;
+                }
+                .card {
+                    display: flex;
+                    flex-direction: column;
+                }
+                .thumbnail {
+                    width: 100%;
+                    aspect-ratio: 16/9;
+                    background-color: #e0e0e0;
+                    border-radius: 12px;
+                    position: relative;
+                    background-size: cover;
+                    background-position: center;
+                }
+                .duration {
+                    position: absolute;
+                    bottom: 8px;
+                    right: 8px;
+                    background: rgba(0,0,0,0.8);
+                    color: white;
+                    font-size: 12px;
+                    padding: 2px 4px;
+                    border-radius: 4px;
+                }
+                .details {
+                    display: flex;
+                    gap: 12px;
+                    margin-top: 12px;
+                }
+                .avatar {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    background: #bbb;
+                }
+                .info-title {
+                    font-size: 14px;
+                    font-weight: 600;
+                    line-height: 1.3;
+                    margin-bottom: 4px;
+                }
+                .info-meta {
+                    font-size: 12px;
+                    color: #606060;
                 }
             </style>
         </head>
         <body>
+
+            <!-- Header -->
             <header>
                 <div class="logo-container">
-                    <span style="color:red; font-size:22px;">▶</span> YouTube
+                    <span class="menu-icon">☰</span>
+                    <div class="yt-logo"><span class="play-btn">▶</span> <strong>YouTube</strong><sup>PL</sup></div>
                 </div>
-                <div class="search-container">
-                    <input type="text" class="search-box" placeholder="Szukaj">
+                <div class="search-bar">
+                    <input type="text" class="search-input" placeholder="Szukaj">
                     <button class="search-btn">🔍</button>
                 </div>
-                <div class="user-icon">U</div>
+                <div style="font-size: 14px; color: #065fd4; border: 1px solid #def; padding: 6px 12px; border-radius: 18px;">👤 Zaloguj się</div>
             </header>
 
-            <div class="container">
-                <div class="main-content">
-                    <div class="player-box">
-                        <div class="spinner"></div>
-                        <div class="error-text">Ładowanie strumienia wideo...</div>
+            <div class="main-layout">
+                <!-- Sidebar -->
+                <aside>
+                    <div class="nav-item active">🏠 Główna</div>
+                    <div class="nav-item">🩳 Shorts</div>
+                    <div class="nav-item">📺 Subskrypcje</div>
+                    <hr style="margin: 12px 0; border: none; border-top: 1px solid #e5e5e5;">
+                    <div class="nav-item">📁 Ty</div>
+                    <div class="nav-item">🕒 Historia</div>
+                </aside>
+
+                <!-- Video Feed -->
+                <main>
+                    <!-- Category Filter Buttons -->
+                    <div class="tags">
+                        <span class="tag active">Wszystko</span>
+                        <span class="tag">Gry</span>
+                        <span class="tag">Grand Theft Auto Online</span>
+                        <span class="tag">Na żywo</span>
+                        <span class="tag">Podcasty</span>
+                        <span class="tag">Obejrzane</span>
                     </div>
-                    <div class="video-title">Najnowsze materiały w jakości 4K</div>
-                    <div class="channel-row">
-                        <div class="channel-info">
-                            <div class="channel-avatar"></div>
-                            <div>
-                                <div style="font-weight:bold;">Oficjalny Kanał</div>
-                                <div style="font-size:12px; color:#aaa;">1,2 mln subskrybentów</div>
+
+                    <!-- Video Items -->
+                    <div class="video-grid">
+                        
+                        <!-- Video 1 (LSPDFR / Police Mod) -->
+                        <div class="card">
+                            <div class="thumbnail" style="background-image: url('https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg');">
+                                <span class="duration">1:09:10</span>
+                            </div>
+                            <div class="details">
+                                <div class="avatar"></div>
+                                <div>
+                                    <div class="info-title">MOST REALISTIC MODS FOR LSPDFR! TOP 5 2026</div>
+                                    <div class="info-meta">Simulator Liam<br>14 tys. wyświetleń • 1 miesiąc temu</div>
+                                </div>
                             </div>
                         </div>
-                        <button class="subscribe-btn">Subskrybuj</button>
-                    </div>
-                </div>
 
-                <div class="sidebar">
-                    <div class="rec-item">
-                        <div class="rec-thumb"></div>
-                        <div class="rec-details">
-                            <div class="rec-title">Niesamowite ujęcia przyrody w jakości 8K HDR</div>
-                            <div class="rec-meta">Natura TV • 240 tys. wyświetleń</div>
+                        <!-- Video 2 (Amazon Jungle) -->
+                        <div class="card">
+                            <div class="thumbnail" style="background-image: url('https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg');">
+                                <span class="duration">27:00</span>
+                            </div>
+                            <div class="details">
+                                <div class="avatar"></div>
+                                <div>
+                                    <div class="info-title">Sam Pośródku Amazońskiej Dżungli Przez 100 Godzin...</div>
+                                    <div class="info-meta">elo mordo ✔<br>563 tys. wyświetleń • 1 dzień temu</div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="rec-item">
-                        <div class="rec-thumb"></div>
-                        <div class="rec-details">
-                            <div class="rec-title">Szybki poradnik programowania i tworzenia stron</div>
-                            <div class="rec-meta">CodeAcademy • 15 tys. wyświetleń</div>
+
+                        <!-- Video 3 (Shorts/Vlog) -->
+                        <div class="card">
+                            <div class="thumbnail" style="background-image: url('https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg');">
+                                <span class="duration">12:45</span>
+                            </div>
+                            <div class="details">
+                                <div class="avatar"></div>
+                                <div>
+                                    <div class="info-title">Walcz z prawdziwymi graczami. Dołącz teraz całkowicie za darmo.</div>
+                                    <div class="info-meta">Sponsorowane • War Thunder</div>
+                                </div>
+                            </div>
                         </div>
+
                     </div>
-                    <div class="rec-item">
-                        <div class="rec-thumb"></div>
-                        <div class="rec-details">
-                            <div class="rec-title">Skrót najważniejszych wiadomości ze świata technologii</div>
-                            <div class="rec-meta">TechNews • 89 tys. wyświetleń</div>
-                        </div>
-                    </div>
-                </div>
+                </main>
             </div>
+
         </body>
         </html>
     `);
